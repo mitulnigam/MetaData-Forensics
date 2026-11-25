@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Upload — MetaScope{% endblock %}
+
+{% block body %}
+<div class="hero">
+  <h1>Every file is hiding something.</h1>
+  <p>Drop in a photo, PDF, document, or audio file, and MetaScope surfaces the
+     metadata buried inside it: <span class="accent">GPS location</span>, author,
+     device, software, and timestamps.</p>
+</div>
+
+<div class="panel">
+  <form method="post" action="{{ url_for('analyze') }}" enctype="multipart/form-data" id="f">
+    <label class="drop" id="drop">
+      <div class="icon">&#8681;</div>
+      <strong>Drop a file here, or click to browse</strong>
+      <div class="types">Images, PDF, Word documents, and audio files</div>
+      <input type="file" name="file" id="file"
+             accept=".jpg,.jpeg,.png,.tiff,.tif,.webp,.pdf,.docx,.mp3,.flac,.m4a,.ogg,.wav,.aac">
+      <div class="filename" id="fn"></div>
+    </label>
+    <div class="actions">
+      <button type="submit" class="btn">Extract metadata</button>
+    </div>
+  </form>
+  <p class="hint">Files are analyzed in memory and deleted immediately &middot; nothing is stored.</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const drop = document.getElementById("drop");
+  const input = document.getElementById("file");
+  const fn = document.getElementById("fn");
+  input.addEventListener("change", () => {
+    fn.textContent = input.files.length ? "Selected: " + input.files[0].name : "";
+  });
+  ["dragover","dragenter"].forEach(e =>
+    drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add("drag"); }));
+  ["dragleave","drop"].forEach(e =>
+    drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove("drag"); }));
+  drop.addEventListener("drop", ev => {
+    if (ev.dataTransfer.files.length) {
+      input.files = ev.dataTransfer.files;
+      fn.textContent = "Selected: " + input.files[0].name;
+    }
+  });
+</script>
+{% endblock %}

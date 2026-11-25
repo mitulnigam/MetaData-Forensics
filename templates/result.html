@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}{{ filename }} — MetaScope{% endblock %}
+
+{% set icons = {"image": "\U0001F5BC", "pdf": "\U0001F4C4", "docx": "\U0001F4DD", "audio": "\U0001F3B5"} %}
+
+{% block body %}
+<div class="filehead">
+  <div class="fileicon">{{ icons.get(kind, "\U0001F50D") }}</div>
+  <span class="fn">{{ filename }}</span>
+  <span class="pill">{{ kind }}</span>
+  <span class="pill">{{ size }}</span>
+</div>
+
+{% if result.error %}
+  <div class="panel"><p style="color:var(--c-identity);">Could not analyze: {{ result.error }}</p></div>
+{% else %}
+
+<div class="panel">
+  <h2>Privacy highlights
+    <span class="count-badge">{{ result.flags|length }} sensitive item{{ '' if result.flags|length == 1 else 's' }}</span>
+  </h2>
+  {% if result.flags %}
+    {% for label, value, note in result.flags %}
+    {% set cat = label|flag_cat %}
+    <div class="flag" style="--cat: var(--c-{{ cat }});">
+      <div class="dot"></div>
+      <div>
+        <div><span class="lbl">{{ label }}</span><span class="cat">{{ cat }}</span></div>
+        <div class="val">{{ value }}</div>
+        <div class="note">
+          {% if note.startswith('http') %}<a href="{{ note }}" target="_blank" rel="noopener">{{ note }}</a>
+          {% else %}{{ note }}{% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p class="clean">&#10003; None found — this file appears clean of identifying metadata.</p>
+  {% endif %}
+</div>
+
+{% if gps %}
+<div class="panel">
+  <h2>Location</h2>
+  <p class="coords">{{ gps[0] }}, {{ gps[1] }} &middot;
+    <a href="{{ gps[2] }}" target="_blank" rel="noopener">open in Google Maps</a></p>
+  {% set lat = gps[0]|float %}{% set lon = gps[1]|float %}
+  <iframe class="map" loading="lazy"
+    src="https://www.openstreetmap.org/export/embed.html?bbox={{ lon-0.01 }}%2C{{ lat-0.01 }}%2C{{ lon+0.01 }}%2C{{ lat+0.01 }}&layer=mapnik&marker={{ lat }}%2C{{ lon }}">
+  </iframe>
+</div>
+{% endif %}
+
+{% for section, fields in result.sections.items() %}
+<div class="panel">
+  <h2>{{ section }}</h2>
+  <table>
+    {% for key, value in fields.items() %}
+    <tr><td class="k">{{ key }}</td><td class="v">{{ value }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endfor %}
+
+{% endif %}
+
+<div class="actions" style="justify-content:flex-start;">
+  <a href="{{ url_for('index') }}" class="btn secondary">&larr; Analyze another file</a>
+</div>
+{% endblock %}
